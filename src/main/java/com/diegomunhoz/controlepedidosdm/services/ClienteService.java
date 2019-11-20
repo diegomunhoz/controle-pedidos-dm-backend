@@ -67,6 +67,30 @@ public class ClienteService {
 		return obj;
 	}
 
+	public List<Cliente> findAll(){
+		return repo.findAll();
+	}
+	
+	public Page<Cliente> findPage(Integer page, Integer linesPerPage, String orderBy, String direction){
+		PageRequest pageRequest = new PageRequest(page, linesPerPage, Direction.valueOf(direction), orderBy);
+		return repo.findAll(pageRequest);
+		
+	}
+	
+	public Cliente findByEmail(String email) {
+		UserSS user = UserService.authenticated();
+		if (user == null || !user.hasRole(Perfil.ADMIN) && !email.equals(user.getUsername())) {
+			throw new AuthorizationException("Acesso negado");
+		}
+		
+		Cliente obj = repo.findByEmail(email);
+		if (obj == null) {
+			throw new ObjectNotFoundException(
+					"Objeto não encontrado! Email: " + email + ", Tipo: " + Cliente.class.getName());
+		}
+		return obj;
+	}
+
 	@Transactional
 	public Cliente insert(Cliente obj) {
 		obj.setId(null);
@@ -88,16 +112,6 @@ public class ClienteService {
 		} catch (DataIntegrityViolationException e) {
 			throw new DataIntegrityException("Não é possível excluir porque há pedidos relacionados");
 		}
-	}
-	
-	public List<Cliente> findAll(){
-		return repo.findAll();
-	}
-	
-	public Page<Cliente> findPage(Integer page, Integer linesPerPage, String orderBy, String direction){
-		PageRequest pageRequest = new PageRequest(page, linesPerPage, Direction.valueOf(direction), orderBy);
-		return repo.findAll(pageRequest);
-		
 	}
 	
 	public Cliente fromDTO(ClienteDTO objDto) {
